@@ -23,6 +23,7 @@
  *    Added project description document (in progress)
  *    Added env_limits.h header containing environment constants
  *    Added pins.h header containing pin definitions  
+ *    Added random number generation to produce spurious energy inflows
  */
 
 #include <stdio.h>
@@ -100,7 +101,7 @@ void collectEnergyFromEnvironment(void) {
   poolEnergy += energySourceReading;
 
   if (millis() % RANDOM_INFLOW_INTERVAL == 0) {
-    poolEnergy += random(RANDOM_INFLOW_MAX);
+    poolEnergy += random(RANDOM_INFLOW_MAX + 1);
   }
 }
 
