@@ -128,23 +128,23 @@ void signalEnergyLevelAndNetGain(void) {
 }
 
 void signalMotorOff(void) {
-  
+  // TODO
 }
 
 void logSystemState(void) {
-  
+  // TODO
 }
 
 void checkOnButtonPressed(void) {
-  
+  // TODO
 }
 
 void checkOffButtonPressed(void) {
-  
+  // TODO
 }
 
 void checkToggleButtonPressed(void) {
-  
+  // TODO
 }
 
 void signalLowEnergy(bool powerDownMotor) {
