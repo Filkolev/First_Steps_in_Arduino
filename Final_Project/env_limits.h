@@ -1,6 +1,9 @@
 // Serial communication
 #define BAUD_RATE 9600
 
+// Random inflow max value
+#define RANDOM_INFLOW_MAX 10000
+
 // Analog and digital read value limits
 #define MIN_ANALOG_READ 0
 #define MAX_ANALOG_READ 1023
@@ -29,7 +32,9 @@
 // timeouts
 #define DEBOUNCE_INTERVAL 50
 #define LOG_INFO_INTERVAL 5000
+#define RANDOM_INFLOW_INTERVAL 1000
 #define LOW_ENERGY_TIMEOUT 1000
 #define OK_ENERGY_TIMEOUT 1000
 #define HIGH_ENERGY_TIMEOUT 500
 #define CRITICAL_ENERGY_TIMEOUT 250
+

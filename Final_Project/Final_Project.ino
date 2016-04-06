@@ -35,7 +35,7 @@ const String infoMessageTemplate =
           "Net Inflow [%d (%d inflow, %d consumed, %d released)], " 
           "Valve [%d%% open]";
 
-int poolEnergy = 0;
+long poolEnergy = 0;
 int prevPoolEnergy = 0;
 int netGain;
 int releaseValveReading;
@@ -60,6 +60,7 @@ int energySourceReading;
 
 void setup() {
   Serial.begin(BAUD_RATE);
+  randomSeed(analogRead(A6));
 
   pinMode(LOW_ENERGY_LED, OUTPUT);
   pinMode(OK_ENERGY_LED, OUTPUT);
@@ -97,6 +98,10 @@ void loop() {
 void collectEnergyFromEnvironment(void) {
   energySourceReading = analogRead(ENERGY_SOURCE);
   poolEnergy += energySourceReading;
+
+  if (millis() % RANDOM_INFLOW_INTERVAL == 0) {
+    poolEnergy += random(RANDOM_INFLOW_MAX);
+  }
 }
 
 void checkUserIntervention(void) {
