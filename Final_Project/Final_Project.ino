@@ -30,23 +30,15 @@
  *    Work in progress: implemented motor control
  *    Implemented pool status LED blinking
  *    Implemented logging
+ *    TODO: Fix environment limits; shut down motor
  */
-
-#include <stdio.h>
 
 #include "env_limits.h"
 #include "pins.h"
 
-const char* infoMessageTemplate = 
-          "I: Motor [%s, %d%% speed, %s], Pool [%s (%d / %d)], " 
-          "Net Inflow [%d (%d inflow, %d consumed, %d released)], " 
-          "Valve [%d%% open]";
-          
-char *logMessage;
-
 long poolEnergy = 0;
 char poolState[9] = {0};
-int prevPoolEnergy = 0;
+long prevPoolEnergy = 0;
 
 long totalInflow = 0;
 long prevInflow = 0;
@@ -54,6 +46,7 @@ long totalConsumed = 0;
 long prevConsumed = 0;
 long totalReleased = 0;
 long prevReleased = 0;
+int rateOfNetChange;
 
 int releaseValveReading;
 
@@ -73,7 +66,7 @@ int toggleButtonPrevState = LOW;
 long toggleButtonLastDebounce = 0;
 
 int motorRegulatorPotReading;
-int motorSpeed = 0;
+int motorSpeed = ZERO_SPEED;
 bool isMotorRotatingClockwise = true;
 bool isMotorInLowPowerMode = false;
 
@@ -81,6 +74,9 @@ int energySourceReading;
 
 long lastLedChange = 0;
 int blinkLedState = LOW;
+
+long previousInfoLog = 0;
+long previousRandomEnergyGain = 0;
 
 void setup() {
   Serial.begin(BAUD_RATE);
@@ -104,27 +100,33 @@ void setup() {
   pinMode(MOTOR_OFF_SIGNAL, OUTPUT);
 }
 
-void loop() {
-  collectEnergyFromEnvironment();
+void loop() {  
+  collectEnergyFromEnvironment(); 
   checkUserIntervention();
-  expendEnergy();  
+  expendEnergy();
+  
+  // TODO: Fix net gain LEDs
   signalEnergyLevelAndNetGain();
 
   if (motorSpeed == ZERO_SPEED) {
-    signalMotorOff();
+    // signalMotorOff();
   }
-
-  if (millis() % LOG_INFO_INTERVAL == 0) {
+  
+  long temp = millis();
+  if (temp - previousInfoLog >= LOG_INFO_INTERVAL) { 
     logSystemState();
+    previousInfoLog = temp;
   }
 }
 
 void collectEnergyFromEnvironment(void) {
   energySourceReading = analogRead(ENERGY_SOURCE);
   poolEnergy += energySourceReading;
+  totalInflow += energySourceReading;
 
-  if (millis() % RANDOM_INFLOW_INTERVAL == 0) {
+  if (millis() - previousRandomEnergyGain >= RANDOM_INFLOW_INTERVAL) {
     poolEnergy += random(RANDOM_INFLOW_MAX + 1);
+    previousRandomEnergyGain = millis();
   }
 
   if (poolEnergy > POOL_FULL) {
@@ -139,13 +141,16 @@ void checkUserIntervention(void) {
 }
 
 void expendEnergy(void) {
-  releaseValveReading = analogRead(RELEASE_VALVE);
-  runMotor(false);
+  releaseValveReading = analogRead(RELEASE_VALVE);  
+  runMotor(false);  
+
+  totalReleased += releaseValveReading;
+  totalConsumed += motorSpeed;
   poolEnergy -= motorSpeed + releaseValveReading;
 
   if (poolEnergy < POOL_EMPTY) {
     poolEnergy = POOL_EMPTY;
-  }
+  }  
 }
 
 void signalEnergyLevelAndNetGain(void) {
@@ -157,7 +162,9 @@ void signalEnergyLevelAndNetGain(void) {
   } else if (poolEnergy < POOL_LOW_HIGHER) {
     signalLowEnergy(false);
     strcpy(poolState, "Low"); 
-    enterMotorLowPowerMode();
+    if (motorSpeed != ZERO_SPEED && !isMotorInLowPowerMode) {
+      enterMotorLowPowerMode();
+    }
   } else if (poolEnergy < POOL_HIGH_LOWER) {
     signalOptimalEnergy();
     strcpy(poolState, "OK");         
@@ -173,14 +180,22 @@ void signalEnergyLevelAndNetGain(void) {
   }
 
   if (poolEnergy > prevPoolEnergy) {
-    analogWrite(
-      NET_GAIN_LED, 
-      (poolEnergy - prevPoolEnergy) / ANALOG_READ_WRITE_COEFFICIENT);
+    signalRateChange(NET_GAIN_LED, NET_LOSS_LED, poolEnergy - prevPoolEnergy);
   } else {
-    analogWrite(
-      NET_LOSS_LED, 
-      (prevPoolEnergy - poolEnergy) / ANALOG_READ_WRITE_COEFFICIENT);
+    signalRateChange(NET_LOSS_LED, NET_GAIN_LED, prevPoolEnergy - poolEnergy);    
   }
+}
+
+void signalRateChange(int ledOn, int ledOff, long diff) {
+  rateOfNetChange = map(
+      diff, 
+      0, 
+      2000000, 
+      MIN_ANALOG_WRITE, 
+      MAX_ANALOG_WRITE);
+
+    analogWrite(ledOn, rateOfNetChange);
+    analogWrite(ledOff, MIN_ANALOG_READ);
 }
 
 void signalMotorOff(void) {
@@ -208,22 +223,31 @@ void logSystemState(void) {
       break;    
   }
   
-  int valveOpenPercentage = 100 * releaseValveReading / MAX_ANALOG_READ;
+  long valveOpenPercentage = 100L * releaseValveReading / MAX_ANALOG_READ;
 
-  sprintf(
-    logMessage, 
-    infoMessageTemplate, 
-    motorSpeed == ZERO_SPEED ? "OFF" : "ON",
-    motorSpeedPercent,
-    isMotorRotatingClockwise ? "Clockwise" : "Counter-clockwise",
-    poolState,
-    poolEnergy,
-    POOL_FULL,
-    poolEnergy - prevPoolEnergy,
-    totalInflow - prevInflow,
-    totalConsumed - prevConsumed,
-    totalReleased - prevReleased,
-    valveOpenPercentage);
+  Serial.print("I: Motor [");
+  Serial.print(motorSpeed == ZERO_SPEED ? "OFF" : "ON");
+  Serial.print(", ");
+  Serial.print(motorSpeedPercent);
+  Serial.print("% speed, ");
+  Serial.print(isMotorRotatingClockwise ? "Clockwise" : "Counter-clockwise");
+  Serial.print("], Pool [");
+  Serial.print(poolState);
+  Serial.print(" (");
+  Serial.print(poolEnergy);
+  Serial.print(" / ");
+  Serial.print(POOL_FULL);
+  Serial.print(")], Net Inflow [");
+  Serial.print(poolEnergy - prevPoolEnergy);
+  Serial.print(" (");
+  Serial.print(totalInflow - prevInflow);
+  Serial.print(" inflow, ");
+  Serial.print(totalConsumed - prevConsumed);
+  Serial.print(" consumed, ");
+  Serial.print(totalReleased - prevReleased);
+  Serial.print(" released)], Valve [");
+  Serial.print(valveOpenPercentage);
+  Serial.println("% open]");
 
   prevPoolEnergy = poolEnergy;  
   prevInflow = totalInflow;
@@ -238,19 +262,20 @@ void checkButtonPressed(
   int *reading, 
   long *lastDebounce, 
   void (*func)(void)){
+    long currentMillis = millis();
     *reading = digitalRead(button);
 
     if (*reading != *prevState) {
-      *lastDebounce = millis();
+      *lastDebounce = currentMillis;
     }
 
-    if (millis() - *lastDebounce >= DEBOUNCE_INTERVAL) {
+    if (currentMillis - *lastDebounce >= DEBOUNCE_INTERVAL) {
       if (*reading != *state) {
         *state = *reading;
-      }
 
-      if (*state == HIGH) {
-        func();
+        if (*state == HIGH) {
+          func();
+        }
       }
     }
 
@@ -294,7 +319,7 @@ void signalLowEnergy(bool powerDownMotor) {
 
   blinkLed(LOW_ENERGY_LED, LOW_ENERGY_TIMEOUT);
 
-  if (powerDownMotor) {
+  if (powerDownMotor && motorSpeed != ZERO_SPEED) {
     turnOffMotor();
     Serial.println("<E> Motor shut down. Reason: low energy.");
   }
@@ -332,7 +357,7 @@ void signalCriticalEnergy(bool powerDownMotor) {
 
   blinkLed(CRITICAL_ENERGY_LED, CRITICAL_ENERGY_TIMEOUT);
 
-  if (powerDownMotor) {
+  if (powerDownMotor && motorSpeed != ZERO_SPEED) {
     turnOffMotor();
     Serial.println("<E> Motor shut down. Reason: high energy.");
   }
@@ -344,12 +369,18 @@ void turnOffMotor(void) {
     return;
   }
   
-  motorSpeed = ZERO_SPEED;  
+  motorSpeed = ZERO_SPEED; 
+  Serial.println("<I> Received OFF signal. Motor turned OFF."); 
 }
 
 void turnOnMotor(void) {
   if (motorSpeed != ZERO_SPEED) {
     Serial.println("<W> Receved ON signal. Motor is already ON. Nothing to do.");
+    return;
+  }
+
+  if (poolEnergy <= POOL_LOW_HIGHER || POOL_HIGH_LOWER < poolEnergy) {
+    Serial.println("<E> Receved ON signal. Energy in pool is not within safe limits. Signal ignored.");
     return;
   }
   

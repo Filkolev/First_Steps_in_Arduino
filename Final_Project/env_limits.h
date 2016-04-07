@@ -1,10 +1,8 @@
-#define ANALOG_READ_WRITE_COEFFICIENT 4
-
 // Serial communication
 #define BAUD_RATE 9600
 
 // Random inflow max value
-#define RANDOM_INFLOW_MAX 10000
+#define RANDOM_INFLOW_MAX 1000
 
 // Analog and digital read value limits
 #define MIN_ANALOG_READ 0
@@ -29,11 +27,12 @@
 #define POOL_LOW_HIGHER 50000
 #define POOL_HIGH_LOWER 150000
 #define POOL_CRITICAL_LOWER 175000
+#define POOL_FULL_LOWER 200000
 #define POOL_FULL 250000
 
 // Timeouts
 #define DEBOUNCE_INTERVAL 50
-#define LOG_INFO_INTERVAL 5000
+#define LOG_INFO_INTERVAL 3000
 #define RANDOM_INFLOW_INTERVAL 1000
 #define LOW_ENERGY_TIMEOUT 1000
 #define OK_ENERGY_TIMEOUT 1000
