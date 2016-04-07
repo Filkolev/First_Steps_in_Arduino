@@ -1,3 +1,5 @@
+#define ANALOG_READ_WRITE_COEFFICIENT 4
+
 // Serial communication
 #define BAUD_RATE 9600
 

@@ -84,7 +84,7 @@ int blinkLedState = LOW;
 
 void setup() {
   Serial.begin(BAUD_RATE);
-  randomSeed(analogRead(A6));
+  randomSeed(analogRead(A5));
 
   pinMode(LOW_ENERGY_LED, OUTPUT);
   pinMode(OK_ENERGY_LED, OUTPUT);
@@ -154,7 +154,7 @@ void signalEnergyLevelAndNetGain(void) {
   if (poolEnergy == POOL_EMPTY) {
     signalLowEnergy(true);   
     strcpy(poolState, "Empty");
-  } else if (poolEnergy <= POOL_LOW_HIGHER) {
+  } else if (poolEnergy < POOL_LOW_HIGHER) {
     signalLowEnergy(false);
     strcpy(poolState, "Low"); 
     enterMotorLowPowerMode();
@@ -170,6 +170,16 @@ void signalEnergyLevelAndNetGain(void) {
   } else {
     signalCriticalEnergy(true); 
     strcpy(poolState, "Full");    
+  }
+
+  if (poolEnergy > prevPoolEnergy) {
+    analogWrite(
+      NET_GAIN_LED, 
+      (poolEnergy - prevPoolEnergy) / ANALOG_READ_WRITE_COEFFICIENT);
+  } else {
+    analogWrite(
+      NET_LOSS_LED, 
+      (prevPoolEnergy - poolEnergy) / ANALOG_READ_WRITE_COEFFICIENT);
   }
 }
 
