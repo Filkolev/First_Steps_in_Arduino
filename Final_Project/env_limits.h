@@ -4,7 +4,7 @@
 // Random inflow max value
 #define RANDOM_INFLOW_MAX 1000
 
-// Analog and digital read value limits
+// Analog and digital read/write value limits
 #define MIN_ANALOG_READ 0
 #define MAX_ANALOG_READ 1023
 #define MIN_ANALOG_WRITE 0

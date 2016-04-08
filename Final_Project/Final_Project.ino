@@ -432,9 +432,9 @@ void toggleMotorDirection(void) {
     return;
   }
 
-  Serial.print("<W> Received TOGGLE signal. Motor now rotates ");
-  Serial.println(isMotorRotatingClockwise ? "clockwise." : "counter-clockwise.");
   isMotorRotatingClockwise = !isMotorRotatingClockwise;
+  Serial.print("<I> Received TOGGLE signal. Motor now rotates ");
+  Serial.println(isMotorRotatingClockwise ? "clockwise." : "counter-clockwise.");
 }
 
 void runMotor(bool turnMotorOn) {
