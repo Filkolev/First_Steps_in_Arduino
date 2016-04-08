@@ -163,8 +163,8 @@ void expendEnergy(void) {
   releaseValveReading = analogRead(RELEASE_VALVE);
   runMotor(false);
 
-  totalReleased += releaseValveReading;
-  totalConsumed += motorSpeed;
+  totalReleased += min(poolEnergy, releaseValveReading);
+  totalConsumed += min(poolEnergy, motorSpeed);
   poolEnergy -= motorSpeed + releaseValveReading;
 
   if (poolEnergy < POOL_EMPTY) {
