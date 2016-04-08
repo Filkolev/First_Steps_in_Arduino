@@ -11,7 +11,7 @@
    of action to keep the system running, various sensors provide useful
    information about the system’s state.
 
-   For more information see: http://tiny.cc/yfglay
+   For more information see: http://tiny.cc/8uznay
 
    Author: Filip Kolev
    Date: April 2016
@@ -143,9 +143,10 @@ void collectEnergyFromEnvironment(void) {
   poolEnergy += energySourceReading;
   totalInflow += energySourceReading;
 
-  if (millis() - prevRandomEnergyGain >= RANDOM_INFLOW_INTERVAL) {
+  currentMillis = millis();
+  if (currentMillis - prevRandomEnergyGain >= RANDOM_INFLOW_INTERVAL) {
     poolEnergy += random(RANDOM_INFLOW_MAX + 1);
-    prevRandomEnergyGain = millis();
+    prevRandomEnergyGain = currentMillis;
   }
 
   if (poolEnergy > POOL_FULL) {
