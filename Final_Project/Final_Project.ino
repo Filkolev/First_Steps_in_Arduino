@@ -92,7 +92,9 @@ long currentMillis;
 
 void setup() {
   Serial.begin(BAUD_RATE);
-  randomSeed(analogRead(A5));
+  
+  // Seed the random generator with readings from an unused analog pin
+  randomSeed(analogRead(A5)); 
 
   pinMode(LOW_ENERGY_LED, OUTPUT);
   pinMode(OK_ENERGY_LED, OUTPUT);
@@ -126,7 +128,7 @@ void loop() {
   signalEnergyLevelAndNetGain();
 
   if (motorSpeed == ZERO_SPEED) {
-    // signalMotorOff();
+    signalMotorOff();
   }
 
   currentMillis = millis();
@@ -215,7 +217,8 @@ void signalRateChange(int ledOn, int ledOff, long diff) {
   if(currentMillis - prevInfoLog < LOG_INFO_INTERVAL) {
     return;
   }
-  
+
+  // Map the power of illumination based on empirical tests
   rateOfNetChange = map(
                       diff,
                       0,
@@ -278,7 +281,7 @@ int getMotorSpeedPercent(void) {
     case FULL_SPEED:
       return 100;
     default:
-      return 0;
+      return 0; // Shouldn't ever reach this, but just to be safe
   }
 }
 
