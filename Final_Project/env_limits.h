@@ -1,6 +1,9 @@
 // Serial communication
 #define BAUD_RATE 9600
 
+// Motor off signal frequency (31 - 65535)
+#define MOTOR_OFF_FREQUENCY 50000
+
 // Random inflow max value
 #define RANDOM_INFLOW_MAX 1000
 

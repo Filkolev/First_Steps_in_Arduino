@@ -240,12 +240,12 @@ void signalRateChange(int ledOn, int ledOff, long diff) {
   analogWrite(ledOff, MIN_ANALOG_WRITE);
 }
 
-void signalMotorOff(void) {
-  digitalWrite(MOTOR_OFF_SIGNAL, HIGH);
+void signalMotorOff(void) {  
+  tone(MOTOR_OFF_SIGNAL, MOTOR_OFF_FREQUENCY);
 }
 
 void signalMotorOn(void) {
-  digitalWrite(MOTOR_OFF_SIGNAL, LOW);
+  noTone(MOTOR_OFF_SIGNAL);
 }
 
 void logSystemState(void) {
