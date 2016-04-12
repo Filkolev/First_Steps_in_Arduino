@@ -39,6 +39,8 @@
       Testing and buf fixes
       Added more log messages
       Fixed net inflow LEDs' behaviour
+   2016-04-12 - Filip Kolev
+      Enhanced motor off signal logic
 */
 
 #include "env_limits.h"
@@ -112,6 +114,8 @@ void setup() {
   pinMode(MOTOR_2A_PIN, OUTPUT);
 
   pinMode(MOTOR_OFF_SIGNAL, OUTPUT);
+
+  signalMotorOff();
 }
 
 void loop() {
@@ -125,11 +129,7 @@ void loop() {
   collectEnergyFromEnvironment();
   checkUserIntervention();
   expendEnergy();  
-  signalEnergyLevelAndNetGain();
-
-  if (motorSpeed == ZERO_SPEED) {
-    signalMotorOff();
-  }
+  signalEnergyLevelAndNetGain();  
 
   currentMillis = millis();
   if (currentMillis - prevInfoLog >= LOG_INFO_INTERVAL) {
@@ -233,6 +233,10 @@ void signalRateChange(int ledOn, int ledOff, long diff) {
 
 void signalMotorOff(void) {
   digitalWrite(MOTOR_OFF_SIGNAL, HIGH);
+}
+
+void signalMotorOn(void) {
+  digitalWrite(MOTOR_OFF_SIGNAL, LOW);
 }
 
 void logSystemState(void) {
@@ -409,6 +413,7 @@ void turnOffMotor(void) {
   }
 
   motorSpeed = ZERO_SPEED;
+  signalMotorOff();
   Serial.println("<I> Received OFF signal. Motor turned OFF.");
 }
 
@@ -425,6 +430,7 @@ void turnOnMotor(void) {
 
   Serial.println("<I> Receved ON signal. Motor tuned ON.");
   runMotor(true);
+  signalMotorOn();
 }
 
 void toggleMotorDirection(void) {
