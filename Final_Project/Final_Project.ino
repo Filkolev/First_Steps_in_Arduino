@@ -169,10 +169,14 @@ void expendEnergy(void) {
   releaseValveReading = analogRead(RELEASE_VALVE);
   runMotor(false);
 
-  totalReleased += min(poolEnergy, releaseValveReading);
+  // Motor has priority over release valve
   totalConsumed += min(poolEnergy, motorSpeed);
-  poolEnergy -= motorSpeed + releaseValveReading;
+  poolEnergy -= min(poolEnergy, motorSpeed);
+   
+  totalReleased += min(poolEnergy, releaseValveReading);  
+  poolEnergy -= min(poolEnergy, releaseValveReading);
 
+  // Sanity - although logic above should prevent abnormalities
   if (poolEnergy < POOL_EMPTY) {
     poolEnergy = POOL_EMPTY;
   }
