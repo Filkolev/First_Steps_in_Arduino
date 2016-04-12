@@ -41,6 +41,7 @@
       Fixed net inflow LEDs' behaviour
    2016-04-12 - Filip Kolev
       Enhanced motor off signal logic
+      Improved net inflow stats in logs
 */
 
 #include "env_limits.h"
@@ -57,6 +58,7 @@ long prevConsumed = 0;
 long totalReleased = 0;
 long prevReleased = 0;
 int rateOfNetChange;
+int randomGain;
 
 int releaseValveReading;
 
@@ -145,12 +147,15 @@ void collectEnergyFromEnvironment(void) {
 
   currentMillis = millis();
   if (currentMillis - prevRandomEnergyGain >= RANDOM_INFLOW_INTERVAL) {
-    poolEnergy += random(RANDOM_INFLOW_MAX + 1);
+    randomGain = random(RANDOM_INFLOW_MAX + 1);
+    poolEnergy += randomGain;
+    totalInflow += randomGain;
     prevRandomEnergyGain = currentMillis;
   }
 
   if (poolEnergy > POOL_FULL) {
-    poolEnergy = POOL_FULL;
+    totalInflow -= poolEnergy - POOL_FULL;
+    poolEnergy = POOL_FULL;    
   }
 }
 
