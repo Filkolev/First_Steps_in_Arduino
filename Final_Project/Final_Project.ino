@@ -224,7 +224,7 @@ void signalRateChange(int ledOn, int ledOff, long diff) {
   currentMillis = millis();
 
   // Stabilize signals to correspond to info logs
-  if(currentMillis - prevInfoLog < LOG_INFO_INTERVAL) {
+  if (currentMillis - prevInfoLog < LOG_INFO_INTERVAL) {
     return;
   }
 
@@ -237,7 +237,7 @@ void signalRateChange(int ledOn, int ledOff, long diff) {
                       MAX_ANALOG_WRITE);
 
   analogWrite(ledOn, rateOfNetChange);
-  analogWrite(ledOff, MIN_ANALOG_READ);
+  analogWrite(ledOff, MIN_ANALOG_WRITE);
 }
 
 void signalMotorOff(void) {
