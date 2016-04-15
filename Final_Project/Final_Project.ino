@@ -131,7 +131,8 @@ void loop() {
   collectEnergyFromEnvironment();
   checkUserIntervention();
   expendEnergy();  
-  signalEnergyLevelAndNetGain();  
+  determineEnergyLevel();  
+  determineNetEnergyGain();
 
   currentMillis = millis();
   if (currentMillis - prevInfoLog >= LOG_INFO_INTERVAL) {
@@ -182,8 +183,8 @@ void expendEnergy(void) {
   }
 }
 
-void signalEnergyLevelAndNetGain(void) {
-  if (poolEnergy < POOL_LOW_LOWER) {
+void determineEnergyLevel(void) {
+    if (poolEnergy < POOL_LOW_LOWER) {
     signalLowEnergy(true);
     strcpy(poolState, "Empty");
   } else if (poolEnergy < POOL_LOW_HIGHER) {
@@ -212,7 +213,9 @@ void signalEnergyLevelAndNetGain(void) {
     strcpy(poolState, "Full");
     exitLowPowerMode();
   }
+}
 
+void determineNetEnergyGain(void) {
   if (poolEnergy > prevPoolEnergy) {
     signalRateChange(NET_GAIN_LED, NET_LOSS_LED, poolEnergy - prevPoolEnergy);
   } else {
