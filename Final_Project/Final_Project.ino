@@ -96,9 +96,9 @@ long currentMillis;
 
 void setup() {
   Serial.begin(BAUD_RATE);
-  
+
   // Seed the random generator with readings from an unused analog pin
-  randomSeed(analogRead(A5)); 
+  randomSeed(analogRead(A5));
 
   pinMode(LOW_ENERGY_LED, OUTPUT);
   pinMode(OK_ENERGY_LED, OUTPUT);
@@ -130,8 +130,8 @@ void loop() {
 
   collectEnergyFromEnvironment();
   checkUserIntervention();
-  expendEnergy();  
-  determineEnergyLevel();  
+  expendEnergy();
+  determineEnergyLevel();
   determineNetEnergyGain();
 
   currentMillis = millis();
@@ -156,7 +156,7 @@ void collectEnergyFromEnvironment(void) {
 
   if (poolEnergy > POOL_FULL) {
     totalInflow -= poolEnergy - POOL_FULL;
-    poolEnergy = POOL_FULL;    
+    poolEnergy = POOL_FULL;
   }
 }
 
@@ -173,8 +173,8 @@ void expendEnergy(void) {
   // Motor has priority over release valve
   totalConsumed += min(poolEnergy, motorSpeed);
   poolEnergy -= min(poolEnergy, motorSpeed);
-   
-  totalReleased += min(poolEnergy, releaseValveReading);  
+
+  totalReleased += min(poolEnergy, releaseValveReading);
   poolEnergy -= min(poolEnergy, releaseValveReading);
 
   // Sanity - although logic above should prevent abnormalities
@@ -184,7 +184,7 @@ void expendEnergy(void) {
 }
 
 void determineEnergyLevel(void) {
-    if (poolEnergy < POOL_LOW_LOWER) {
+  if (poolEnergy < POOL_LOW_LOWER) {
     signalLowEnergy(true);
     strcpy(poolState, "Empty");
   } else if (poolEnergy < POOL_LOW_HIGHER) {
@@ -223,7 +223,7 @@ void determineNetEnergyGain(void) {
   }
 }
 
-void signalRateChange(int ledOn, int ledOff, long diff) {  
+void signalRateChange(int ledOn, int ledOff, long diff) {
   currentMillis = millis();
 
   // Stabilize signals to correspond to info logs
@@ -243,7 +243,7 @@ void signalRateChange(int ledOn, int ledOff, long diff) {
   analogWrite(ledOff, MIN_ANALOG_WRITE);
 }
 
-void signalMotorOff(void) {  
+void signalMotorOff(void) {
   tone(MOTOR_OFF_SIGNAL, MOTOR_OFF_FREQUENCY);
 }
 
@@ -457,7 +457,7 @@ void toggleMotorDirection(void) {
 }
 
 void runMotor(bool turnMotorOn) {
-  if (motorSpeed != ZERO_SPEED || turnMotorOn) {    
+  if (motorSpeed != ZERO_SPEED || turnMotorOn) {
     adjustMotorSpeed();
   }
 
